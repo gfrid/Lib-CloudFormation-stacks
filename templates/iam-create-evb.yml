@@ -1,0 +1,21 @@
+Resources:
+ IAMCreateEventRule:
+  Type: 'AWS::Events::Rule'
+  Properties:
+    Name: IAM-User-Create-Event
+    EventBusName: default
+    Description: do something with it
+    EventPattern:
+      source:
+        - aws.iam
+      detail-type:
+        - AWS API Call via CloudTrail
+      detail:
+        eventSource:
+          - iam.amazonaws.com
+        eventName:
+          - CreateUser
+    State: ENABLED
+    Targets:
+        - Arn: 'arn:aws:events:us-east-1:<account-id>:event-bus/default'
+          Id: t1
