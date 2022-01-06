@@ -1,0 +1,45 @@
+Resources:
+  IAMCheckUnsedCredentials:
+    Type: 'AWS::Config::ConfigRule'
+    Properties:
+      ConfigRuleName: "iam-user-unused-credentials-check"
+      Description: "Check IAM User unused credentials that passed 90 days"
+      Scope:
+        ComplianceResourceTypes: []
+      Description: "A config rule that checks whether your AWS Identity and Access Management (IAM) users have passwords or active access keys that have not been used within the specified number of days you provided. Re-evaluating this rule within 4 hours of the first eva..."
+      InputParameters:
+        maxCredentialUsageAge: "90"
+      Source:
+        Owner: "AWS"
+        SourceIdentifier: "IAM_USER_UNUSED_CREDENTIALS_CHECK"
+      MaximumExecutionFrequency: "TwentyFour_Hours"
+  IAMUserRemediation:
+    DependsOn: IAMCheckUnsedCredentials
+    Type: 'AWS::Config::RemediationConfiguration'
+    Properties:
+      ConfigRuleName: iam-user-unused-credentials-check
+      ResourceType: AWS::IAM::User
+      TargetId: AWSConfigRemediation-RevokeUnusedIAMUserCredentials
+      TargetType: SSM_DOCUMENT
+      TargetVersion: '1'
+      Parameters:
+        AutomationAssumeRole:
+          StaticValue:
+            Values:
+              - >-
+                arn:aws:iam::<account_id>:role/AutomationServiceRole
+        IAMResourceId:
+          ResourceValue:
+            Value: RESOURCE_ID
+        MaxCredentialUsageAge:
+          StaticValue:
+             Values:
+              - >-
+                90
+      ExecutionControls:
+        SsmControls:
+          ConcurrentExecutionRatePercentage: 10
+          ErrorPercentage: 10
+      Automatic: true
+      MaximumAutomaticAttempts: 10
+      RetryAttemptSeconds: 600
