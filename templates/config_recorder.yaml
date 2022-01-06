@@ -1,0 +1,14 @@
+Resources:
+  ITConfigRecorder:
+    Type: 'AWS::Config::ConfigurationRecorder'
+    Properties:
+      Name: config_recorded
+      RoleARN: arn:aws:iam::<account_id>:role/config_recorder
+  DeliveryChannel: 
+    Type: 'AWS::Config::DeliveryChannel'
+    Properties: 
+      ConfigSnapshotDeliveryProperties: 
+        DeliveryFrequency: "Six_Hours"
+      S3BucketName: !Ref 'ConfigBucket'
+  ConfigBucket:
+    Type: AWS::S3::Bucket
