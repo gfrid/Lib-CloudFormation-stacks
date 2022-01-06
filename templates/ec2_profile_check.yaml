@@ -1,0 +1,48 @@
+Resources:
+  EC2CheckProfileAttached:
+    Type: 'AWS::Config::ConfigRule'
+    Properties:
+      ConfigRuleName: ec2-instance-profile-attached
+      Scope:
+        ComplianceResourceTypes:
+          - 'AWS::EC2::Instance'
+      Description: >-
+        A Config rule that checks whether Amazon Elastic Compute Cloud (Amazon
+        EC2) instances have IAM Role Attached
+      InputParameters:
+        IamInstanceProfileArnList: arn:aws:iam::<account-id>:instance-profile/Ec2RoleForSSM
+      Source:
+        Owner: AWS
+        SourceIdentifier: EC2_INSTANCE_PROFILE_ATTACHED
+  EC2Remediation:
+    DependsOn: EC2CheckProfileAttached
+    Type: 'AWS::Config::RemediationConfiguration'
+    Properties:
+      ConfigRuleName: ec2-instance-profile-attached
+      ResourceType: 'AWS::EC2::Instance'
+      TargetId: AWS-AttachIAMToInstance
+      TargetType: SSM_DOCUMENT
+      TargetVersion: '1'
+      Parameters:
+        AutomationAssumeRole:
+          StaticValue:
+            Values:
+              - 'arn:aws:iam::<account-id>:role/AutomationServiceRole'
+        RoleName:
+          StaticValue:
+            Values:
+              - 'Ec2RoleForSSM'
+        InstanceId:
+          ResourceValue:
+            Value: RESOURCE_ID
+        ForceReplace:
+          StaticValue:
+            Values:
+              - 'false'
+      ExecutionControls:
+        SsmControls:
+          ConcurrentExecutionRatePercentage: 10
+          ErrorPercentage: 10
+      Automatic: true
+      MaximumAutomaticAttempts: 10
+      RetryAttemptSeconds: 600
